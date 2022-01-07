@@ -9,6 +9,73 @@ import {
     STROKE
 } from "./defaultShapes";
 import { useEffect, useState } from "react";
+import * as R from "ramda";
+
+interface Bounds {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+}
+
+function getBounds(objs: fabric.Object[]): Bounds {
+    let x1 = 99999;
+    let y1 = 999999;
+    let x2 = 0;
+    let y2 = 0;
+    let width = 0;
+    let height = 0;
+    objs.forEach(v => {
+        let rect = v.getBoundingRect();
+        let tl = AbsolutePoint.getTopLeft(v);
+        if (tl.x < x1) {
+            x1 = tl.x;
+        }
+        if (tl.y < y1) {
+            y1 = tl.y;
+        }
+        if (tl.y + rect.height > y2) {
+            y2 = tl.y + rect.height;
+        }
+
+        if (tl.x + rect.width > x2) {
+            x2 = tl.x + rect.width;
+        }
+    });
+
+    return {
+        left: x1,
+        top: y1,
+        height: y2 - y1,
+        width: x2 - x1
+    };
+}
+
+class AbsolutePoint {
+    /**
+     * Gets the absolute center point of the object (even when grouped)
+     */
+    static getCenterPoint(object: fabric.Object): fabric.Point {
+        if ((object as any).group) {
+            const center = (object as any).group.getCenterPoint() as fabric.Point;
+            return object.getCenterPoint().add(center);
+        }
+        return object.getCenterPoint();
+    }
+    /**
+     * Gets the absolute top left point of the object (even when grouped)
+     */
+    static getTopLeft(object: fabric.Object): fabric.Point {
+        if ((object as any).group) {
+            const groupped = (object as any).group;
+            return new fabric.Point(
+                object.left + groupped.getCenterPoint().x,
+                object.top + groupped.getCenterPoint().y
+            );
+        }
+        return new fabric.Point(object.left ?? 0, object.top ?? 0);
+    }
+}
 
 export interface FabricJSEditor {
     canvas: fabric.Canvas;
@@ -19,6 +86,7 @@ export interface FabricJSEditor {
     updateText: (text: string) => void;
     deleteAll: () => void;
     deleteSelected: () => void;
+    groupItems: (objs: fabric.Object[]) => void;
     fillColor: string;
     strokeColor: string;
     setFillColor: (color: string) => void;
@@ -74,6 +142,19 @@ export const buildEditor = (
                 textObject.set({ text });
                 canvas.renderAll();
             }
+        },
+        // group the passed items.
+        groupItems: (objs: fabric.Object[]) => {
+            // get the bounds (left,top,width,height)
+            const bounds = getBounds(objs);
+            console.log(bounds);
+
+            const g = new fabric.Group(objs, bounds);
+
+            // first remove the originals from the canvas
+            canvas.remove(...objs);
+            // add back the group.
+            canvas.add(g);
         },
         deleteAll: () => {
             canvas.getObjects().forEach(object => canvas.remove(object));

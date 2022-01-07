@@ -151,7 +151,7 @@ export class Canvas extends React.Component<CanvasProps, CanvasState> {
      * Find the fabric.Object by a clicked point.
      */
     public searchObjects(e: Event): fabric.Object | null {
-        const lst: fabric.Object[] = [];
+        // const lst: fabric.Object[] = [];
         // canvas.findTarget is not typed, but more allows for pixel precision detection of objects
         const targets = this.state.canvas?.findTarget(e, true);
 

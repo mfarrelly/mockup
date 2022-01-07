@@ -67,14 +67,30 @@ export function Diagram() {
         [editor]
     );
 
+    const join = React.useCallback(() => {
+        //
+        // alert(`There are ${selectedObjects?.length} items selected.`);
+
+        if (selectedObjects && selectedObjects?.length > 0) {
+            editor?.groupItems(selectedObjects);
+        }
+    }, [selectedObjects]);
+
+    const isJoinable = React.useMemo(() => {
+        return selectedObjects?.length === 2;
+    }, [selectedObjects]);
+
     return (
         <Paper variant="outlined">
             {editor && (
                 <ButtonGroup color="primary">
-                    <Button onClick={() => alert("what")}>Add</Button>
+                    <Button onClick={() => alert("what")}>Thunk</Button>
                     <Button onClick={() => onAdd("box")}>Box</Button>
                     <Button onClick={() => onAdd("circle")}>Circle</Button>
                     <Button onClick={() => onAdd("line")}>Line</Button>
+                    <Button onClick={() => join()} disabled={!isJoinable}>
+                        Join
+                    </Button>
                 </ButtonGroup>
             )}
             <CanvasFC
